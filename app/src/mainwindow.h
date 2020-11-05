@@ -55,7 +55,7 @@ private slots: // all actions
 
     // void on_actionSave_as_triggered();
 
-    // void elementClicked(const QModelIndex& current);
+    void elementClicked(const QModelIndex& current);
 
 private:
     Ui::MainWindow *ui;

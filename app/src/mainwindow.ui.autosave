@@ -349,6 +349,22 @@
      </rect>
     </property>
    </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>371</y>
+      <width>241</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Recently used</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

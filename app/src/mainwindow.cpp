@@ -6,43 +6,53 @@ MainWindow::MainWindow(QWidget *parent) :
     m_model(new QFileSystemModel(this))
 {
     ui->setupUi(this);
-    //ui->menuBar->setNativeMenuBar(false);
+    ui->menuBar->setNativeMenuBar(false);
     //setWindowTitle("VENTANA DE MUERTE");
     
     ui->treeView->setModel(m_model);
     ui->treeView->setHeaderHidden(true);
     ui->treeView->setSelectionBehavior (QAbstractItemView::SelectRows);
     ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    QPixmap pix("./app/resources/music_anonim.png");
+    int w = ui->albumImage->width();
+    int h = ui->albumImage->height();
+
+    ui->albumImage->setPixmap(pix.scaled(w, h, Qt::KeepAspectRatio));
+
     for (int i = 1; i < m_model->columnCount(); i++)
         ui->treeView->hideColumn(i);
-    //QObject::connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
+    QObject::connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
 }
 
-// void MainWindow::elementClicked(const QModelIndex& current) {
-//     QModelIndex p = current;
-//     std::vector<QString> vec;
-//     QString tmp_path;
+void MainWindow::elementClicked(const QModelIndex& current) {
+    QModelIndex p = current;
+    std::vector<QString> vec;
+    QString tmp_path;
 
-//     while(p.isValid()) {
-//         vec.push_back(p.data().toString());
-//         p = p.parent();
-//     }
-//     std::reverse(vec.begin(), vec.end());
-//     for (const auto& i : vec) {
-//         if (i.toStdString() != "/")
-//             tmp_path += "/" + i;
-//     }
-//     m_path_file = tmp_path;
-//     TagLib::FileRef f(tmp_path.toStdString().c_str());
+    while(p.isValid()) {
+        vec.push_back(p.data().toString());
+        p = p.parent();
+    }
+    std::reverse(vec.begin(), vec.end());
+    for (const auto& i : vec) {
+        if (i.toStdString() != "/")
+            tmp_path += "/" + i;
+    }
+    m_path_file = tmp_path;
+    TagLib::FileRef f(tmp_path.toStdString().c_str());
 
-//     if(f.file()->isValid()) {
-//         ui->audioFileName->setText(current.data().toString());
-//         ui->textEdit->setText(TStringToQString(f.tag()->artist()));
-//         ui->textEdit_1->setText(TStringToQString(f.tag()->title()));
-//         ui->textEdit_2->setText(TStringToQString(f.tag()->album()));
-//         ui->textEdit_3->setText(TStringToQString(f.tag()->genre()));
-//     }
-// }
+    if(f.file()->isValid()) {
+        int sec = f.audioProperties()->lengthInSeconds();
+
+        ui->trackName->setText(current.data().toString());
+        ui->authorName->setText(TStringToQString(f.tag()->artist()));
+        ui->trackLength->setText(QString::number(sec / 60) + ":" + QString::number(sec % 60));
+        //ui->textEdit_1->setText(TStringToQString(f.tag()->title()));
+        //ui->textEdit_2->setText(TStringToQString(f.tag()->album()));
+        //ui->textEdit_3->setText(TStringToQString(f.tag()->genre()));
+    }
+}
 
 MainWindow::~MainWindow()
 {
@@ -117,4 +127,3 @@ void MainWindow::on_actionOpen_File_triggered() {
 //         ui->treeView->setRootIndex(m_model->index(m_path_dir));
 //     }
 // }
-
