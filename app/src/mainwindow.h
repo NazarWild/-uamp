@@ -46,6 +46,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    QString rightTimeChange(int sec);
+
 private slots: // all actions 
     void on_actionOpen_Folder_triggered(); 
 
