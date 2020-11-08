@@ -19,13 +19,12 @@
 #include <QPlainTextEdit>
 #include <QPalette>
 #include <QLabel>
+#include <QMediaPlayer>
 
 #include <iostream>
 #include <string>
 #include <algorithm>
 #include <vector>
-
-#include "main_lib.h"
 
 #include <tag.h>
 #include <tagutils.h>
@@ -33,6 +32,8 @@
 #include <fileref.h>
 #include <taglib_export.h>
 #include <audioproperties.h>
+
+#include "main_lib.h"
 
 namespace Ui {
     class MainWindow;
@@ -53,9 +54,13 @@ private slots: // all actions
 
     void on_actionOpen_File_triggered();
 
+    void on_horizontalSlider_valueChanged(int value);
+
     // void on_actionSave_triggered();
 
     // void on_actionSave_as_triggered();
+
+    void playMusic();
 
     void elementClicked(const QModelIndex& current);
 
@@ -64,4 +69,5 @@ private:
     QString m_path_file;
     QString m_path_dir;
     QFileSystemModel *m_model;
+    QMediaPlayer *m_player;
 };

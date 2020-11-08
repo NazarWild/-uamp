@@ -3,11 +3,10 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow),
-    m_model(new QFileSystemModel(this))
+    m_model(new QFileSystemModel(this)),
+    m_player(new QMediaPlayer)
 {
     ui->setupUi(this);
-    //ui->menuBar->setNativeMenuBar(false);
-    //setWindowTitle("VENTANA DE MUERTE");
     
     ui->treeView->setModel(m_model);
     ui->treeView->setHeaderHidden(true);
@@ -30,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i = 1; i < m_model->columnCount(); i++)
         ui->treeView->hideColumn(i);
     QObject::connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
+    QObject::connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playMusic())); // кнопка запуска трека
 }
 
 void MainWindow::elementClicked(const QModelIndex& current) {
@@ -55,6 +55,11 @@ void MainWindow::elementClicked(const QModelIndex& current) {
         ui->trackName->setText(current.data().toString());
         ui->authorName->setText(TStringToQString(f.tag()->artist()));
         ui->trackLength->setText(rightTimeChange(sec));
+        if (m_player->state() != QMediaPlayer::StoppedState)
+            m_player->stop();
+        playMusic(); // отыгрывает трек
+
+
         //ui->textEdit_1->setText(TStringToQString(f.tag()->title()));
         //ui->textEdit_2->setText(TStringToQString(f.tag()->album()));
         //ui->textEdit_3->setText(TStringToQString(f.tag()->genre()));
@@ -142,4 +147,27 @@ QString MainWindow::rightTimeChange(int sec) {
     if (second.length() == 1)
         second = "0" + second;
     return first + ":" + second;
+}
+
+void MainWindow::playMusic() {
+    if (m_player->state() == QMediaPlayer::StoppedState) {
+        m_player->setMedia(QUrl::fromLocalFile(m_path_file));
+        ui->horizontalSlider->setPosition(0);
+        ui->horizontalSlider->setRange(0, m_player->duration() / 1000);
+        m_player->setVolume(50); // надо добавить исправление звука
+        m_player->play(); 
+        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
+    }
+    else if (m_player->state() == QMediaPlayer::PlayingState) {
+        m_player->pause();
+        ui->playButton->setIcon(QIcon("./app/resources/playButton.svg"));
+    }
+    else if (m_player->state() == QMediaPlayer::PausedState) {
+        m_player->play();
+        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
+    }
+}
+
+void MainWindow::on_horizontalSlider_valueChanged(int value) {
+    m_player->setPosition(value * 1000);
 }
