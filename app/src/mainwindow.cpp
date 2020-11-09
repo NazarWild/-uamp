@@ -34,7 +34,9 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 void MainWindow::changing_run() {
+    ui->horizontalSlider->blockSignals(true);
     ui->horizontalSlider->setSliderPosition(m_player->position()/1000);
+    ui->horizontalSlider->blockSignals(false);
 }
 
 void MainWindow::elementClicked(const QModelIndex& current) {
@@ -156,9 +158,8 @@ QString MainWindow::rightTimeChange(int sec) {
 
 void MainWindow::playMusic() {
     if (m_player->state() == QMediaPlayer::StoppedState) {
-        TagLib::FileRef f(m_path_file.toStdString().c_str());
         m_player->setMedia(QUrl::fromLocalFile(m_path_file));
-        ui->horizontalSlider->setRange(0, f.audioProperties()->lengthInSeconds());
+        ui->horizontalSlider->setRange(0, m_player->duration()/1000);
         ui->horizontalSlider->setSliderPosition(0);
         m_player->setVolume(50); // надо добавить исправление звука
         m_player->play(); 
@@ -176,4 +177,14 @@ void MainWindow::playMusic() {
 
 void MainWindow::on_horizontalSlider_valueChanged(int value) {
     m_player->setPosition(value * 1000);
+}
+
+void MainWindow::on_horizontalSlider_sliderPressed()
+{
+    m_player->blockSignals(true);
+}
+
+void MainWindow::on_horizontalSlider_sliderReleased()
+{
+    m_player->blockSignals(false);
 }

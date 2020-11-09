@@ -98,7 +98,7 @@
 	"MOC_RELAXED_MODE" : false,
 	"MOC_SKIP" : [],
 	"MULTI_CONFIG" : false,
-	"PARALLEL" : 6,
+	"PARALLEL" : 4,
 	"PARSE_CACHE_FILE" : "/Users/okolevatov/okolevatov/uamp/build/app/src/CMakeFiles/liba_autogen.dir/ParseCache.txt",
 	"QT_MOC_EXECUTABLE" : "/Users/okolevatov/.brew/opt/qt/bin/moc",
 	"QT_UIC_EXECUTABLE" : "/Users/okolevatov/.brew/opt/qt/bin/uic",

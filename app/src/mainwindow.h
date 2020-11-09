@@ -66,6 +66,10 @@ private slots: // all actions
 
     void elementClicked(const QModelIndex& current);
 
+    void on_horizontalSlider_sliderPressed();
+
+    void on_horizontalSlider_sliderReleased();
+
 private:
     Ui::MainWindow *ui;
     QString m_path_file;
