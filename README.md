@@ -25,19 +25,19 @@ If you do not have ```CMAKE_PREFIX_PATH``` you can fix it in 2 ways:
 - support these audio formats:mp3 ,mp4 ,wav
 - support such standard options:
 
-	• play - to start playing the song
+	- play - to start playing the song
 	
-	• pause - to temporarily interrupt the song
+	- pause - to temporarily interrupt the song
 	
-	• stop - to completely interrupt the song
+	- stop - to completely interrupt the song
 	
-	• fast forward - to play the song forward for 10 seconds
+	- fast forward - to play the song forward for 10 seconds
 	
-	• rewind - to play the song back for 10 seconds
+	- rewind - to play the song back for 10 seconds
 	
-	• next - to play the next song in the Queue
+	- next - to play the next song in the Queue
 	
-	• previous - to play the previous song in the Queue
+	- previous - to play the previous song in the Queue
 
 - control sound volume
 - control bass volume (bass booster)
@@ -52,12 +52,12 @@ If you do not have ```CMAKE_PREFIX_PATH``` you can fix it in 2 ways:
 - save its state. The program restores all data after an app restart. 
 - support displaying/editing of the audio tags listed below for all supported audio formats:
 	
-	• Artist
+	- Artist
 	
-	• Title
+	- Title
 	
-	• Album
+	- Album
 	
-	• Genre
+	- Genre
 	
-	• Audio file path
+	- Audio file path
