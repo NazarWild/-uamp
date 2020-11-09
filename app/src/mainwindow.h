@@ -62,6 +62,8 @@ private slots: // all actions
 
     void playMusic();
 
+    void changing_run();
+
     void elementClicked(const QModelIndex& current);
 
 private:

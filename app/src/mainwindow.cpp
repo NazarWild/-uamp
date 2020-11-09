@@ -30,6 +30,11 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->treeView->hideColumn(i);
     QObject::connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
     QObject::connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playMusic())); // кнопка запуска трека
+    QObject::connect(m_player, &QMediaPlayer::positionChanged, this, &MainWindow::changing_run);
+}
+
+void MainWindow::changing_run() {
+    ui->horizontalSlider->setSliderPosition(m_player->position()/1000);
 }
 
 void MainWindow::elementClicked(const QModelIndex& current) {
@@ -151,9 +156,10 @@ QString MainWindow::rightTimeChange(int sec) {
 
 void MainWindow::playMusic() {
     if (m_player->state() == QMediaPlayer::StoppedState) {
+        TagLib::FileRef f(m_path_file.toStdString().c_str());
         m_player->setMedia(QUrl::fromLocalFile(m_path_file));
-        ui->horizontalSlider->setPosition(0);
-        ui->horizontalSlider->setRange(0, m_player->duration() / 1000);
+        ui->horizontalSlider->setRange(0, f.audioProperties()->lengthInSeconds());
+        ui->horizontalSlider->setSliderPosition(0);
         m_player->setVolume(50); // надо добавить исправление звука
         m_player->play(); 
         ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
