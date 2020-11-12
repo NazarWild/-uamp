@@ -6,6 +6,7 @@ find_library(TAGLIB taglib)
 
 include_directories(
     src
+    resources
     ../build/3dparty/taglib
     ../3dparty/taglib/taglib/ape
     ../3dparty/taglib/taglib/asf
@@ -39,18 +40,20 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Core Gui Multimedia DBus MultimediaWidgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Core Gui Multimedia DBus MultimediaWidgets REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Core Gui Multimedia DBus MultimediaWidgets Sql REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Core Gui Multimedia DBus MultimediaWidgets Sql REQUIRED)
 
 add_executable(uamp main.cpp)
 
-add_subdirectory(src)
+add_subdirectory(src
+                resources)
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Multimedia
         Qt${QT_VERSION_MAJOR}::DBus
+        Qt${QT_VERSION_MAJOR}::Sql
         liba
         tag
 )

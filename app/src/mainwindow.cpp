@@ -4,9 +4,20 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow),
     m_model(new QFileSystemModel(this)),
-    m_player(new QMediaPlayer)
+    m_player(new QMediaPlayer),
+    m_db(QSqlDatabase::addDatabase("QSQLITE"))
 {
     ui->setupUi(this);
+    
+    m_db.setHostName("localhost");
+    m_db.setDatabaseName("DATABASE_uamp");
+    bool ok = m_db.open();
+    
+    if (ok) {
+        QSqlQuery query;
+        query.exec("CREATE TABLE music_info (Name TEXT, Duration INTEGER, Artist TEXT, Album TEXT, Genre TEXT, Rating INTEGER, Num_of_playing INTEGER);");
+        query.exec("INSERT INTO music_info (Name, Duration, Artist, Album, Genre, Rating, Num_of_playing) VALUES ('hui', 10, 'hui', 'hui', '2', 5, 6);");
+    }
     
     ui->treeView->setModel(m_model);
     ui->treeView->setHeaderHidden(true);
@@ -21,11 +32,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->playButton->setIcon(QIcon("./app/resources/playButton.svg"));
     ui->rewindButton->setIcon(QIcon("./app/resources/rewind.svg"));
     ui->previousButton->setIcon(QIcon("./app/resources/previousButton.svg"));
-
     ui->forwardButton->setIcon(QIcon("./app/resources/forward.svg"));
-    //ui->forwardButton->setText("Fast forward");
     ui->nextButton->setIcon(QIcon("./app/resources/nextButton.svg"));
-    //ui->nextButton->setText("Next");
+    ui->favorite->setIcon(QIcon("./app/resources/heart.svg"));
+    ui->playlists->setIcon(QIcon("./app/resources/headphones.svg"));
+    ui->info->setIcon(QIcon("./app/resources/information.svg"));
+
     for (int i = 1; i < m_model->columnCount(); i++)
         ui->treeView->hideColumn(i);
     QObject::connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
@@ -75,6 +87,7 @@ void MainWindow::elementClicked(const QModelIndex& current) {
 
 MainWindow::~MainWindow()
 {
+    m_db.close();
     delete m_model;
     delete ui;
 }
@@ -188,3 +201,31 @@ void MainWindow::on_horizontalSlider_sliderReleased()
 {
     m_player->blockSignals(false);
 }
+
+
+// bool TagFunctions::set_image_mpeg(char *file_path, char *image_path)
+// {
+//     QFileInfo file(file_path);
+//     if (!file.isWritable()) {
+//         return false;
+//     }
+//     TagLib::MPEG::File mpegFile(file_path);
+//     TagLib::ID3v2::Tag *tag = mpegFile.ID3v2Tag();
+//     TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
+//     TagLib::ID3v2::AttachedPictureFrame *frame = 0;
+//     if(frames.isEmpty())
+//     {
+//         frame = new TagLib::ID3v2::AttachedPictureFrame;
+//         tag->addFrame(frame);
+//     }
+//     else
+//     {
+//         frame = static_cast<TagLib::ID3v2::AttachedPictureFrame *>(frames.front());
+//     }
+//     ImageFile imageFile(image_path);
+//     TagLib::ByteVector imageData = imageFile.data();
+//     frame->setMimeType("image/jpeg");
+//     frame->setPicture(imageData);
+//     mpegFile.save();
+//     return true;
+// }

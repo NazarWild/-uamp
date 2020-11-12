@@ -20,6 +20,7 @@
 #include <QPalette>
 #include <QLabel>
 #include <QMediaPlayer>
+#include <QtSql>
 
 #include <iostream>
 #include <string>
@@ -76,4 +77,5 @@ private:
     QString m_path_dir;
     QFileSystemModel *m_model;
     QMediaPlayer *m_player;
+    QSqlDatabase m_db;
 };
