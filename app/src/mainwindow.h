@@ -71,6 +71,8 @@ private slots: // all actions
 
     void on_horizontalSlider_sliderReleased();
 
+    void show_table();
+
 private:
     Ui::MainWindow *ui;
     QString m_path_file;

@@ -10,15 +10,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     
     m_db.setHostName("localhost");
-    m_db.setDatabaseName("DATABASE_uamp");
+    m_db.setDatabaseName("databaseUamp");
     bool ok = m_db.open();
     
     if (ok) {
         QSqlQuery query;
-        query.exec("CREATE TABLE music_info (Name TEXT, Duration INTEGER, Artist TEXT, Album TEXT, Genre TEXT, Rating INTEGER, Num_of_playing INTEGER);");
-        query.exec("INSERT INTO music_info (Name, Duration, Artist, Album, Genre, Rating, Num_of_playing) VALUES ('hui', 10, 'hui', 'hui', '2', 5, 6);");
+        query.exec("CREATE TABLE music_info (Title TEXT, Duration TEXT, Artist TEXT, Album TEXT, Genre TEXT, Rating INTEGER, Played INTEGER);");
     }
-    
+    show_table();
     ui->treeView->setModel(m_model);
     ui->treeView->setHeaderHidden(true);
     ui->treeView->setSelectionBehavior (QAbstractItemView::SelectRows);
@@ -30,13 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->albumImage->setPixmap(pix.scaled(w, h, Qt::KeepAspectRatio));
     ui->playButton->setIcon(QIcon("./app/resources/playButton.svg"));
-    ui->rewindButton->setIcon(QIcon("./app/resources/rewind.svg"));
     ui->previousButton->setIcon(QIcon("./app/resources/previousButton.svg"));
-    ui->forwardButton->setIcon(QIcon("./app/resources/forward.svg"));
     ui->nextButton->setIcon(QIcon("./app/resources/nextButton.svg"));
-    ui->favorite->setIcon(QIcon("./app/resources/heart.svg"));
     ui->playlists->setIcon(QIcon("./app/resources/headphones.svg"));
-    ui->info->setIcon(QIcon("./app/resources/information.svg"));
 
     for (int i = 1; i < m_model->columnCount(); i++)
         ui->treeView->hideColumn(i);
@@ -77,11 +72,29 @@ void MainWindow::elementClicked(const QModelIndex& current) {
         if (m_player->state() != QMediaPlayer::StoppedState)
             m_player->stop();
         playMusic(); // отыгрывает трек
-
-
-        //ui->textEdit_1->setText(TStringToQString(f.tag()->title()));
-        //ui->textEdit_2->setText(TStringToQString(f.tag()->album()));
-        //ui->textEdit_3->setText(TStringToQString(f.tag()->genre()));
+        QSqlQuery query;
+        
+        QString str = "INSERT INTO music_info (Title, Duration, Artist, Album, Genre, Rating, Played) ";
+        str += "VALUES ('";
+        str += TStringToQString(f.tag()->title());
+        str += "', '";
+        str += rightTimeChange(sec);
+        str += "', '";
+        str += TStringToQString(f.tag()->artist());
+        str += "', '" + TStringToQString(f.tag()->album());
+        str += "', '" + TStringToQString(f.tag()->genre());
+        str += "', 0, 0);";
+        
+        std::cout << str.toStdString() << std::endl;
+        query.exec(str.toStdString().c_str());
+        show_table();
+        // // current.data().toString();
+        // TStringToQString(f.tag()->title());
+        // rightTimeChange(sec);
+        // TStringToQString(f.tag()->artist());
+        // TStringToQString(f.tag()->album());
+        // TStringToQString(f.tag()->genre());
+        //"INSERT INTO music_info (Title, Duration, Artist, Album, Genre, Rating, Played) VALUES ('hui', 10, 'hui', 'hui', '2', 5, 6);"
     }
 }
 
@@ -201,6 +214,27 @@ void MainWindow::on_horizontalSlider_sliderReleased()
 {
     m_player->blockSignals(false);
 }
+
+
+
+void MainWindow::show_table() {
+    QSqlTableModel *model = new QSqlTableModel;
+    model->setTable("music_info");
+    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    model->select();
+    model->setHeaderData(0, Qt::Horizontal, tr("Name"));
+    model->setHeaderData(1, Qt::Horizontal, tr("Duration"));
+    model->setHeaderData(2, Qt::Horizontal, tr("Artist"));
+    model->setHeaderData(3, Qt::Horizontal, tr("Album"));
+    model->setHeaderData(4, Qt::Horizontal, tr("Genre"));
+    model->setHeaderData(5, Qt::Horizontal, tr("Rating"));
+    model->setHeaderData(6, Qt::Horizontal, tr("Played"));
+
+    ui->tableView->setModel(model);
+    //ui->tableView->hideColumn(0); // don't show the ID
+    ui->tableView->show();
+}
+
 
 
 // bool TagFunctions::set_image_mpeg(char *file_path, char *image_path)
