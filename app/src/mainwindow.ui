@@ -10,6 +10,15 @@
     <height>610</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="focusPolicy">
+   <enum>Qt::StrongFocus</enum>
+  </property>
   <property name="acceptDrops">
    <bool>true</bool>
   </property>
@@ -418,9 +427,15 @@
        <height>441</height>
       </rect>
      </property>
+     <property name="gridStyle">
+      <enum>Qt::DotLine</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
     </widget>
    </widget>
-   <widget class="QTreeView" name="treeView_1">
+   <widget class="QListWidget" name="listWidget">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -428,6 +443,12 @@
       <width>250</width>
       <height>280</height>
      </rect>
+    </property>
+    <property name="dragDropMode">
+     <enum>QAbstractItemView::DragDrop</enum>
+    </property>
+    <property name="defaultDropAction">
+     <enum>Qt::MoveAction</enum>
     </property>
    </widget>
    <widget class="QTreeView" name="treeView">
@@ -510,6 +531,7 @@
     <addaction name="menuOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_as"/>
+    <addaction name="actionRecently_opened"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -549,6 +571,9 @@
   <action name="actionRecently_opened">
    <property name="text">
     <string>Recently opened</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
  </widget>

@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.18.2)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCES mainwindow.cpp lib.cpp)
+set(SOURCES mainwindow.cpp recentlyused.cpp playlists.cpp)
 
-set(HEADERS mainwindow.h main_lib.h)
+set(HEADERS mainwindow.h recentlyused.h playlists.h)
 
-set(UI mainwindow.ui)
+set(UI mainwindow.ui recentlyused.ui playlists.ui)
 
 add_library(liba ${SOURCES} ${HEADERS} ${UI})
 

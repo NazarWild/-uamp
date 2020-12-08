@@ -19,8 +19,12 @@
 #include <QPlainTextEdit>
 #include <QPalette>
 #include <QLabel>
+#include <QDebug>
 #include <QMediaPlayer>
 #include <QtSql>
+#include <QAbstractItemView>
+#include <QSqlTableModel>
+#include <QMediaPlaylist>
 
 #include <iostream>
 #include <string>
@@ -34,7 +38,8 @@
 #include <taglib_export.h>
 #include <audioproperties.h>
 
-#include "main_lib.h"
+#include "recentlyused.h"
+#include "playlists.h"
 
 namespace Ui {
     class MainWindow;
@@ -50,6 +55,22 @@ public:
 
     QString rightTimeChange(int sec);
 
+    void openMusicFile();
+
+    //databases part
+    void creationOfTables();
+
+    //music info
+    void insertIntoMusicInfo();
+    void show_table();
+
+    //setting info
+    void insertSettInfo(); //cur song + recently used
+    //recently used
+    void insertRecentlyUsed(); //recently used
+    //
+    void dataRecovery();
+
 private slots: // all actions 
     void on_actionOpen_Folder_triggered(); 
 
@@ -61,17 +82,37 @@ private slots: // all actions
 
     // void on_actionSave_as_triggered();
 
-    void playMusic();
+    void on_horizontalSlider_sliderPressed();
+
+    void on_horizontalSlider_sliderReleased();
+
+    void currentMusicTableIndex(const QModelIndex &index);
 
     void changing_run();
 
     void elementClicked(const QModelIndex& current);
 
-    void on_horizontalSlider_sliderPressed();
+    void playMusic();
 
-    void on_horizontalSlider_sliderReleased();
+    void on_editTableModel_clicked(int, QSqlRecord &);
 
-    void show_table();
+    void on_actionRecently_opened_triggered();
+
+    void onLibraryContextMenu(const QPoint &point);
+
+    void addToPlaylist();
+    
+    void on_playlists_clicked();
+
+    void changePlaylist(QString playlist);
+
+    void setDir(QString dir);
+
+    void on_dial_sliderMoved(int position);
+
+    void on_nextButton_clicked();
+
+    void on_previousButton_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -79,5 +120,19 @@ private:
     QString m_path_dir;
     QFileSystemModel *m_model;
     QMediaPlayer *m_player;
+    QMediaPlaylist *m_playlist;
     QSqlDatabase m_db;
+    QSqlTableModel *m_sqlModel;
+    QModelIndex m_table_index;
+private:
+    QStringList m_allowedTypes = {"*.mp3", "*.m4a", "*.wav", "*.mp4"};
+    QString m_cur_title;
+    QString m_cur_duration;
+    QString m_cur_artist;
+    QString m_cur_album;
+    QString m_cur_genre;
+    int m_cur_pid;
+private:
+    RecentlyUsed *m_recently_used_win;
+    Playlists *m_playlists_win;
 };
