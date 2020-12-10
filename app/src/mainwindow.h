@@ -19,7 +19,6 @@
 #include <QPlainTextEdit>
 #include <QPalette>
 #include <QLabel>
-#include <QDebug>
 #include <QMediaPlayer>
 #include <QtSql>
 #include <QAbstractItemView>
@@ -57,19 +56,32 @@ public:
 
     void openMusicFile();
 
+    void setMusicInfo();
+
     //databases part
     void creationOfTables();
 
-    //music info
     void insertIntoMusicInfo();
+
+    void insertIntoListSidPid();
+
+    QString createFilter();
+    
     void show_table();
 
-    //setting info
     void insertSettInfo(); //cur song + recently used
-    //recently used
+    
     void insertRecentlyUsed(); //recently used
-    //
+    
     void dataRecovery();
+    //Playlist
+    void addGeneral();
+    //
+    void setCurSid();
+
+    bool sidInPidIsUnique();
+
+    void addToQueue();
 
 private slots: // all actions 
     void on_actionOpen_Folder_triggered(); 
@@ -104,7 +116,7 @@ private slots: // all actions
     
     void on_playlists_clicked();
 
-    void changePlaylist(QString playlist);
+    void changePlaylist(int pid);
 
     void setDir(QString dir);
 
@@ -132,6 +144,7 @@ private:
     QString m_cur_album;
     QString m_cur_genre;
     int m_cur_pid;
+    int m_cur_sid;
 private:
     RecentlyUsed *m_recently_used_win;
     Playlists *m_playlists_win;

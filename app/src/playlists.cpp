@@ -8,9 +8,12 @@ Playlists::Playlists(QWidget *parent) :
     ui->setupUi(this);
 
     m_playlist_name = "General";
-    ui->listWidget->addItem("General");
     m_set_playlist.insert("General");
-    insertNameOfPlaylist();
+    
+    ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this,
+            SLOT(onPlaylistsContextMenu(const QPoint &)));
+
     QObject::connect(ui->listWidget, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
 }
 
@@ -65,6 +68,34 @@ void Playlists::on_pushButton_clicked()
 
 void Playlists::elementClicked(const QModelIndex& current) {
     QModelIndex p = current;
+    QSqlQueryModel model;
+    QString zapros = "SELECT pid FROM Playlists WHERE Name LIKE '";
+    zapros += p.data().toString();
+    zapros += "'";
+    model.setQuery(zapros);
 
-    emit changePlaylistSig(p.data().toString());
+    emit changePlaylistSig(model.record(model.rowCount() - 1).value("pid").toInt());
+}
+
+void Playlists::onPlaylistsContextMenu(const QPoint &point)
+{
+    QModelIndex p = ui->listWidget->currentIndex();
+
+    std::cout << p.data().toString().toStdString() << std::endl;
+
+    QMenu contextMenu(tr("SideBar context menu"), this);
+
+    QAction action_new("New playlist", this);
+    connect(&action_new, &QAction::triggered, this, &Playlists::on_pushButton_clicked);
+    contextMenu.addAction(&action_new);
+
+    QAction action_delete("Delete playlist", this);
+    connect(&action_delete, &QAction::triggered, this, &Playlists::func_for_delete);
+    contextMenu.addAction(&action_delete);
+
+    contextMenu.exec(ui->listWidget->viewport()->mapToGlobal(point));
+}
+
+void Playlists::func_for_delete() {
+
 }

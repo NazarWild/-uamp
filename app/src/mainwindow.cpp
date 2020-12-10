@@ -13,7 +13,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    m_cur_pid = 0;
+    m_cur_pid = 1;
+    m_cur_sid = 0;
     m_player->setPlaylist(m_playlist);
 
     m_db.setHostName("localhost");
@@ -28,9 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
     if(!m_path_dir.isEmpty()) {
         m_model->setRootPath(m_path_dir);
         m_model->setNameFilters(m_allowedTypes);
+        ui->treeView->setRootIndex(m_model->index(m_path_dir));
     }
     ui->treeView->setModel(m_model);
-    ui->treeView->setRootIndex(m_model->index(m_path_dir));
     ui->treeView->setHeaderHidden(true);
     ui->treeView->setSelectionBehavior (QAbstractItemView::SelectRows);
 
@@ -56,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(m_player, &QMediaPlayer::positionChanged, this, &MainWindow::changing_run);
     connect(ui->tableView, &QAbstractItemView::clicked, this, &MainWindow::currentMusicTableIndex);
     connect(m_sqlModel, &QSqlTableModel::beforeUpdate, this, &MainWindow::on_editTableModel_clicked);
-    connect(m_playlists_win, SIGNAL(changePlaylistSig(QString)), this, SLOT(changePlaylist(QString)));
+    connect(m_playlists_win, SIGNAL(changePlaylistSig(int)), this, SLOT(changePlaylist(int)));
     connect(m_recently_used_win, SIGNAL(selectDir(QString)), this, SLOT(setDir(QString)));
 }
 
@@ -93,37 +94,49 @@ void MainWindow::openMusicFile() {
             ui->trackName->setText(TStringToQString(f.tag()->title()));
             ui->authorName->setText(TStringToQString(f.tag()->artist()));
             ui->trackLength->setText(rightTimeChange(sec));
+            setMusicInfo();
+        }
+    }
+}
+
+void MainWindow::setMusicInfo() {
+    if(!m_path_file.isEmpty()) {
+        TagLib::FileRef f(m_path_file.toStdString().c_str());
+
+        if(f.file()->isValid()) {
+            int sec = f.audioProperties()->lengthInSeconds();
+
             m_cur_title = TStringToQString(f.tag()->title());
             m_cur_duration = rightTimeChange(sec);
             m_cur_artist = TStringToQString(f.tag()->artist());
             m_cur_album = TStringToQString(f.tag()->album());
             m_cur_genre = TStringToQString(f.tag()->genre());
-            insertIntoMusicInfo();
         }
     }
 }
 
 void MainWindow::creationOfTables() {
     QSqlQuery query;
-    query.exec("CREATE TABLE music_info (sid INTEGER PRIMARY KEY AUTOINCREMENT,Title TEXT, Duration TEXT, Artist TEXT, Album TEXT, Genre TEXT, Rating INTEGER, Played INTEGER, Playlist_id INTEGER, Path TEXT NOT NULL UNIQUE);");
+    query.exec("CREATE TABLE music_info (sid INTEGER PRIMARY KEY AUTOINCREMENT,Title TEXT, Duration TEXT, Artist TEXT, Album TEXT, Genre TEXT, Rating INTEGER, Played INTEGER, Path TEXT NOT NULL UNIQUE);");
     query.exec("CREATE TABLE setting_info (curSong TEXT, recentlyUsed TEXT);");
     query.exec("CREATE TABLE recentlyUsed (Path TEXT NOT NULL UNIQUE);");
-    query.exec("CREATE TABLE Playlists (pid INTEGER PRIMARY KEY  AUTOINCREMENT, Name TEXT NOT NULL UNIQUE);");
+    query.exec("CREATE TABLE Playlists (pid INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL UNIQUE);");
+    addGeneral();
     query.exec("PRAGMA foreign_keys = ON;");
     QString str = "CREATE TABLE List_sid_pid ("  \
       "ID            INTEGER  PRIMARY KEY  AUTOINCREMENT," \
-      "PLAYLIST_R    INTEGER  NOT NULL," \
-      "SONG_R        INTEGER  NOT NULL," \
-      "FOREIGN KEY (PLAYLIST_R) REFERENCES Playlists (pid)" \
-      "FOREIGN KEY (SONG_R) REFERENCES music_info (sid) ON DELETE CASCADE" \
+      "pid    INTEGER  NOT NULL," \
+      "sid        INTEGER  NOT NULL," \
+      "FOREIGN KEY (pid) REFERENCES Playlists (pid)" \
+      "FOREIGN KEY (sid) REFERENCES music_info (sid) ON DELETE CASCADE" \
       ");";
     query.exec(str);
 }
 
 void MainWindow::insertIntoMusicInfo() {
     QSqlQuery query;
-    query.prepare("INSERT INTO music_info (Title, Duration, Artist, Album, Genre, Rating, Played, Playlist_id, Path) "
-                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    query.prepare("INSERT INTO music_info (Title, Duration, Artist, Album, Genre, Rating, Played, Path) "
+                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     query.bindValue(0, m_cur_title);
     query.bindValue(1, m_cur_duration);
     query.bindValue(2, m_cur_artist);
@@ -131,24 +144,50 @@ void MainWindow::insertIntoMusicInfo() {
     query.bindValue(4, m_cur_genre);
     query.bindValue(5, 0);
     query.bindValue(6, 0);
-    query.bindValue(7, 1);
-    query.bindValue(8, m_path_file);
+    query.bindValue(7, m_path_file);
     query.exec();
     show_table();
 }
 
-void MainWindow::show_table() {
-    // QString filter = "Playlists";
+void MainWindow::insertIntoListSidPid() {
+    QSqlQuery query;
+    query.prepare("INSERT INTO List_sid_pid (pid, sid) "
+                  "VALUES (?, ?)");
+    query.bindValue(0, m_cur_pid);
+    query.bindValue(1, m_cur_sid);
+    query.exec();
+}
 
-    // filter +=  " LIKE '";
-    // filter +=  m_cur_pid;
-    // filter +=  "'";
-     
+QString MainWindow::createFilter() {
+    QString filter = "sid IN (";
+    QString query = "SELECT sid FROM List_sid_pid WHERE pid = ";
+    QSqlQueryModel model;
+    query += QString::number(m_cur_pid);
+
+    model.setQuery(query);
+    for (int i = 0; i < model.rowCount(); i++) {
+        if (i < model.rowCount() - 1) {
+            filter += QString::number(model.record(i).value("sid").toInt());
+            filter += ", ";
+        }
+        else {
+            filter += QString::number(model.record(i).value("sid").toInt());
+            filter += ")";
+        }
+    }
+    std::cout << filter.toStdString() << std::endl;
+    return filter;
+}
+
+void MainWindow::show_table() {
+    QString filter = createFilter();
+
     m_sqlModel->setTable("music_info");
     m_sqlModel->setEditStrategy(QSqlTableModel::OnFieldChange);
-    // m_sqlModel->setFilter(filter);
+    m_sqlModel->setFilter(filter);
     m_sqlModel->select();
 
+    ui->tableView->verticalHeader()->hide();
     ui->tableView->setModel(m_sqlModel);
     ui->tableView->setColumnWidth(1, 200);
     ui->tableView->setColumnWidth(2, 70);
@@ -156,15 +195,14 @@ void MainWindow::show_table() {
     ui->tableView->setColumnWidth(4, 177);
     ui->tableView->setColumnWidth(5, 80);
     ui->tableView->setColumnWidth(6, 50);
-    ui->tableView->setColumnWidth(7, 50);
+    ui->tableView->setColumnWidth(7, 70);
     ui->tableView->hideColumn(0); // don't show ID's
-    ui->tableView->hideColumn(8); // don't show the playlists
     ui->tableView->show();
 }
 
 void MainWindow::insertSettInfo() {
     QSqlQuery query;
-    query.prepare("INSERT INTO music_info (curSong, recentlyUsed) "
+    query.prepare("INSERT INTO setting_info (curSong, recentlyUsed) "
                   "VALUES (?, ?)");
     query.bindValue(0, m_path_file);
     query.bindValue(1, m_path_dir);
@@ -187,11 +225,48 @@ void MainWindow::dataRecovery() {
 
     if(!m_path_dir.isEmpty()) {
         m_model->setRootPath(m_path_dir);
-        ui->treeView->setRootIndex(m_model->index(m_path_dir));
+        ui->treeView->setModel(m_model);
     }
-
     model.setQuery("SELECT Name FROM Playlists");
     openMusicFile();
+}
+
+void MainWindow::addGeneral() {
+    QSqlQuery query;
+    query.prepare("INSERT INTO Playlists (Name) "
+                  "VALUES (?)");
+    query.bindValue(0, "General");
+    query.exec();
+}
+
+void MainWindow::setCurSid() {
+    QSqlQueryModel model;
+    QString zapros = "SELECT sid FROM music_info WHERE Path LIKE '";
+    zapros += m_path_file;
+    zapros += "'";
+    model.setQuery(zapros);
+    m_cur_sid = model.record(model.rowCount() - 1).value("sid").toInt();
+}
+
+bool MainWindow::sidInPidIsUnique() {
+    QSqlQueryModel model;
+
+    model.setQuery("SELECT sid, pid FROM List_sid_pid");
+    for (int i = 0; i < model.rowCount(); i++) {
+        if ((model.record(i).value("pid").toInt() == m_cur_pid) 
+            && (model.record(i).value("sid").toInt() == m_cur_sid)) {
+            return false;
+        }
+    }
+    return true;    
+}
+
+void MainWindow::addToQueue() {
+    ui->listWidget->addItem(m_cur_title);
+
+    m_playlist->addMedia(QMediaContent(QUrl::fromLocalFile(m_path_file)));
+
+    std::cout << m_path_file.toStdString() << std::endl;
 }
 
 //private slots
@@ -209,7 +284,9 @@ void MainWindow::on_actionOpen_Folder_triggered()
     m_path_file.clear();
 
     insertRecentlyUsed();
+    insertSettInfo();
     m_model->setRootPath(m_path_dir);
+    m_model->setNameFilters(m_allowedTypes);
     ui->treeView->setRootIndex(m_model->index(m_path_dir));
 }
 
@@ -228,7 +305,10 @@ void MainWindow::on_actionOpen_File_triggered() {
         m_path_dir = fileInfo.dir().absolutePath();
 
         insertRecentlyUsed();
-        m_model->setRootPath(m_path_dir); 
+        insertSettInfo();
+        openMusicFile();
+        m_model->setRootPath(m_path_dir);
+        m_model->setNameFilters(m_allowedTypes);
         ui->treeView->setRootIndex(m_model->index(m_path_dir));
     }
 }
@@ -273,9 +353,9 @@ void MainWindow::elementClicked(const QModelIndex& current) {
     }
     m_path_file = tmp_path;
 
-    addToPlaylist();
     insertSettInfo();
     openMusicFile();
+    addToQueue();
     if (m_player->state() != QMediaPlayer::StoppedState)
         m_player->stop();
     playMusic(); // отыгрывает трек
@@ -322,6 +402,7 @@ void MainWindow::on_actionRecently_opened_triggered() {
     QSqlTableModel *sqlModel = new QSqlTableModel;
 
     sqlModel->setTable("recentlyUsed");
+    // sqlModel->setTable("List_sid_pid");
     sqlModel->select();
 
     m_recently_used_win->setModel(sqlModel);
@@ -348,6 +429,10 @@ void MainWindow::onLibraryContextMenu(const QPoint &point)
 
     QMenu contextMenu(tr("SideBar context menu"), this);
 
+    QAction action_open("Open folder", this);
+    connect(&action_open, &QAction::triggered, this, &MainWindow::on_actionOpen_Folder_triggered);
+    contextMenu.addAction(&action_open);
+
     QAction action_new("Add to playlist", this);
     connect(&action_new, &QAction::triggered, this, &MainWindow::addToPlaylist);
     contextMenu.addAction(&action_new);
@@ -357,8 +442,14 @@ void MainWindow::onLibraryContextMenu(const QPoint &point)
 
 ///////////////////////////////////////////////////////////////////////////
 void MainWindow::addToPlaylist() {
-    m_playlist->addMedia(QMediaContent(QUrl::fromLocalFile(m_path_file)));
-    std::cout << m_path_file.toStdString() << std::endl;
+    if (!m_path_file.isEmpty()) {
+        setMusicInfo();
+        insertIntoMusicInfo();
+        setCurSid();
+        if (sidInPidIsUnique())
+            insertIntoListSidPid();
+        show_table();
+    }
 }
 ///////////////////////////////////////////////////////////////////////////
 
@@ -370,9 +461,8 @@ void MainWindow::on_playlists_clicked() {
     m_playlists_win->show();
 }
 
-void MainWindow::changePlaylist(QString playlist) {
-    std::cout << playlist.toStdString() << std::endl;
-    //m_cur_pid = pid;
+void MainWindow::changePlaylist(int pid) {
+    m_cur_pid = pid;
     show_table();
 }
 
