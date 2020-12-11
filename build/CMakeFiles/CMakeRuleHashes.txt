@@ -1,0 +1,5 @@
+# Hashes of file build rules.
+d62c0e3ae9edf92d234a118076e208f6 3dparty/taglib/CMakeFiles/docs
+1e3c1699589fb3265a5cc3c1b416a2cc 3dparty/taglib/CMakeFiles/uninstall
+28f6e1ac9fc9818ee1e3a04e767f315c app/CMakeFiles/uamp_autogen
+81c8bf0619898b75e7f3af7268686d6e app/resources/CMakeFiles/liba_autogen

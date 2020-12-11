@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc libliba.a CMakeFiles/liba.dir/liba_autogen/mocs_compilation.cpp.o CMakeFiles/liba.dir/mainwindow.cpp.o CMakeFiles/liba.dir/recentlyused.cpp.o CMakeFiles/liba.dir/playlists.cpp.o
+/Library/Developer/CommandLineTools/usr/bin/ranlib libliba.a

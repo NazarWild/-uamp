@@ -29,6 +29,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <QVector>
 
 #include <tag.h>
 #include <tagutils.h>
@@ -137,6 +138,7 @@ private:
     QSqlTableModel *m_sqlModel;
     QModelIndex m_table_index;
 private:
+    QVector<QString> m_queue;
     QStringList m_allowedTypes = {"*.mp3", "*.m4a", "*.wav", "*.mp4"};
     QString m_cur_title;
     QString m_cur_duration;

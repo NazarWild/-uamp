@@ -33,12 +33,13 @@ private slots:
     void onPlaylistsContextMenu(const QPoint &point);
     void func_for_delete();
 signals:
-	void changePlaylistSig(int); 
+    void changePlaylistSig(int); 
 
 private:
   	Ui::Playlists *ui;
 
 private:
-	QString m_playlist_name;
-  std::set<std::string> m_set_playlist;
+    QString m_playlist_name;
+    QString m_cur_pname;
+    std::set<std::string> m_set_playlist;
 };

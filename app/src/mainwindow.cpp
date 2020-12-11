@@ -89,8 +89,6 @@ void MainWindow::openMusicFile() {
         if(f.file()->isValid()) {
             int sec = f.audioProperties()->lengthInSeconds();
 
-            //ui->listWidget->addItem(TStringToQString(f.tag()->title()));
-
             ui->trackName->setText(TStringToQString(f.tag()->title()));
             ui->authorName->setText(TStringToQString(f.tag()->artist()));
             ui->trackLength->setText(rightTimeChange(sec));
@@ -262,11 +260,15 @@ bool MainWindow::sidInPidIsUnique() {
 }
 
 void MainWindow::addToQueue() {
-    ui->listWidget->addItem(m_cur_title);
+	if (!m_queue.contains(m_path_file)) {
+		m_queue.push_back(m_path_file);
 
-    m_playlist->addMedia(QMediaContent(QUrl::fromLocalFile(m_path_file)));
+    	ui->listWidget->addItem(m_cur_title);
 
-    std::cout << m_path_file.toStdString() << std::endl;
+    	m_playlist->addMedia(QMediaContent(QUrl::fromLocalFile(m_path_file)));
+
+    	//std::cout << m_path_file.toStdString() << std::endl;
+	}
 }
 
 //private slots
@@ -401,8 +403,8 @@ void MainWindow::on_editTableModel_clicked(int, QSqlRecord &) {
 void MainWindow::on_actionRecently_opened_triggered() {
     QSqlTableModel *sqlModel = new QSqlTableModel;
 
-    sqlModel->setTable("recentlyUsed");
-    // sqlModel->setTable("List_sid_pid");
+    //sqlModel->setTable("recentlyUsed");
+    sqlModel->setTable("List_sid_pid");
     sqlModel->select();
 
     m_recently_used_win->setModel(sqlModel);

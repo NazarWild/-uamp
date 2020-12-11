@@ -1,0 +1,11 @@
+prefix=/Users/ndykyy/.brew
+exec_prefix=/Users/ndykyy/.brew
+libdir=/Users/ndykyy/.brew/lib
+includedir=/Users/ndykyy/.brew/include
+
+Name: TagLib
+Description: Audio meta-data library
+Requires: 
+Version: 1.11.1
+Libs: -L${libdir} -ltag -lz
+Cflags: -I${includedir}/taglib

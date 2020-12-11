@@ -81,7 +81,7 @@ void Playlists::onPlaylistsContextMenu(const QPoint &point)
 {
     QModelIndex p = ui->listWidget->currentIndex();
 
-    std::cout << p.data().toString().toStdString() << std::endl;
+    m_cur_pname = p.data().toString();
 
     QMenu contextMenu(tr("SideBar context menu"), this);
 
@@ -97,5 +97,27 @@ void Playlists::onPlaylistsContextMenu(const QPoint &point)
 }
 
 void Playlists::func_for_delete() {
+    if (m_cur_pname != "General") {
+        QSqlQuery query;
+        QString str = "DELETE FROM Playlists WHERE Name LIKE '";
+        str += m_cur_pname;
+        str += "'";
+        query.exec(str);
+        m_set_playlist.clear();
+        clearAll();
+        dataRecovery();
 
+        QSqlQueryModel model;
+        QString zapros = "SELECT pid FROM Playlists WHERE Name LIKE '";
+        zapros += m_cur_pname;
+        zapros += "'";
+        model.setQuery(zapros);
+
+        QSqlQuery query1;
+        QString str1 = "DELETE FROM List_sid_pid WHERE pid = ";
+        str1 += QString::number(model.record(model.rowCount() - 1).value("pid").toInt());
+        query1.exec(str1);
+
+        emit changePlaylistSig(1);
+    }
 }
