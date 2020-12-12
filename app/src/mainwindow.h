@@ -113,6 +113,10 @@ private slots: // all actions
 
     void onLibraryContextMenu(const QPoint &point);
 
+    void onTableContextMenu(const QPoint &point);
+
+    void onQueueContextMenu(const QPoint &point);
+
     void addToPlaylist();
     
     void on_playlists_clicked();
@@ -126,6 +130,10 @@ private slots: // all actions
     void on_nextButton_clicked();
 
     void on_previousButton_clicked();
+
+    void funcForDelete();
+
+    void deleteQueueElement();
 
 private:
     Ui::MainWindow *ui;

@@ -39,6 +39,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->treeView, SIGNAL(customContextMenuRequested(const QPoint &)), this,
             SLOT(onLibraryContextMenu(const QPoint &)));
 
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->tableView, SIGNAL(customContextMenuRequested(const QPoint &)), this,
+            SLOT(onTableContextMenu(const QPoint &)));
+
+    ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->listWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this,
+            SLOT(onQueueContextMenu(const QPoint &)));
+
     QPixmap pix("./app/resources/music_anonim.svg");
     int w = ui->albumImage->width();
     int h = ui->albumImage->height();
@@ -442,6 +450,31 @@ void MainWindow::onLibraryContextMenu(const QPoint &point)
     contextMenu.exec(ui->treeView->viewport()->mapToGlobal(point));
 }
 
+void MainWindow::onTableContextMenu(const QPoint &point)
+{
+    // QModelIndex p = ui->tableView->currentIndex();
+    // p.data().toString();
+
+    QMenu contextMenu(tr("SideBar context menu"), this);
+
+    QAction action_delete("Delete from playlist", this);
+    connect(&action_delete, &QAction::triggered, this, &MainWindow::funcForDelete);
+    contextMenu.addAction(&action_delete);
+
+    contextMenu.exec(ui->tableView->viewport()->mapToGlobal(point));
+}
+
+void MainWindow::onQueueContextMenu(const QPoint &point)
+{
+    QMenu contextMenu(tr("SideBar context menu"), this);
+
+    QAction action_delete("Delete from queue", this);
+    connect(&action_delete, &QAction::triggered, this, &MainWindow::deleteQueueElement);
+    contextMenu.addAction(&action_delete);
+
+    contextMenu.exec(ui->listWidget->viewport()->mapToGlobal(point));
+}
+
 ///////////////////////////////////////////////////////////////////////////
 void MainWindow::addToPlaylist() {
     if (!m_path_file.isEmpty()) {
@@ -487,6 +520,26 @@ void MainWindow::on_nextButton_clicked()
 void MainWindow::on_previousButton_clicked()
 {
     m_playlist->previous();
+}
+
+void MainWindow::funcForDelete() {
+    QString path = m_sqlModel->record(m_table_index.row()).value("Path").toString();
+    QSqlQuery query;
+    QString str = "DELETE FROM music_info WHERE Path LIKE '";
+    str += path;
+    str += "'";
+    query.exec(str);
+    show_table();
+}
+
+void MainWindow::deleteQueueElement() {
+    QModelIndex p = ui->tableView->currentIndex();
+    QString currentSong = p.data().toString();
+    std::cout << currentSong.toStdString() << std::endl;
+    // ui->listWidget->clear();
+    // m_queue.removeOne(currentSong);
+    // for (auto item : m_queue)
+    //     ui->listWidget->addItem(item);
 }
 
 // bool TagFunctions::set_image_mpeg(char *file_path, char *image_path)
