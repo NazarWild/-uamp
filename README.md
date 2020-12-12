@@ -12,7 +12,7 @@ Text editor made with Qt GUI
 ### Building
 ##### First step
 If you do not have ```CMAKE_PREFIX_PATH``` you can fix it in 2 ways:
-- go into ```utag/CMakeLists.txt``` and add ```set(CMAKE_PREFIX_PATH "/your/path/to/qt")```
+- go into ```uamp/CMakeLists.txt``` and add ```set(CMAKE_PREFIX_PATH "/your/path/to/qt")```
 - or you can just write in terminal ```export CMAKE_PREFIX_PATH=/your/path/to/qt```
 
 ##### Second step
