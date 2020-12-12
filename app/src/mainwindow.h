@@ -40,6 +40,7 @@
 
 #include "recentlyused.h"
 #include "playlists.h"
+#include "Player.h"
 
 namespace Ui {
     class MainWindow;
@@ -89,15 +90,15 @@ private slots: // all actions
 
     void on_actionOpen_File_triggered();
 
-    void on_horizontalSlider_valueChanged(int value);
+//    void on_horizontalSlider_valueChanged(int value);
 
     // void on_actionSave_triggered();
 
     // void on_actionSave_as_triggered();
 
-    void on_horizontalSlider_sliderPressed();
+//    void on_horizontalSlider_sliderPressed();
 
-    void on_horizontalSlider_sliderReleased();
+//    void on_horizontalSlider_sliderReleased();
 
     void currentMusicTableIndex(const QModelIndex &index);
 
@@ -125,11 +126,11 @@ private slots: // all actions
 
     void setDir(QString dir);
 
-    void on_dial_sliderMoved(int position);
+//    void on_dial_sliderMoved(int position);
 
-    void on_nextButton_clicked();
+//    void on_nextButton_clicked();
 
-    void on_previousButton_clicked();
+//    void on_previousButton_clicked();
 
     void funcForDelete();
 
@@ -158,4 +159,5 @@ private:
 private:
     RecentlyUsed *m_recently_used_win;
     Playlists *m_playlists_win;
+    Player *player;
 };

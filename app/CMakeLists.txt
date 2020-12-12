@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.18.2)
+cmake_minimum_required(VERSION 3.17.2)
 
 set(CMAKE_CXX_STANDARD 17)
 
 find_library(TAGLIB taglib)
+
+set(TAGLIB_PATH "../3dparty/taglib/taglib")
 
 include_directories(
     src

@@ -1,11 +1,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "Player.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow),
     m_model(new QFileSystemModel(this)),
-    m_player(new QMediaPlayer),
-    m_playlist(new QMediaPlaylist(m_player)),
+//    m_player(new QMediaPlayer),
+//    m_playlist(new QMediaPlaylist(m_player)),
     m_db(QSqlDatabase::addDatabase("QSQLITE")),
     m_sqlModel(new QSqlTableModel),
     m_recently_used_win(new RecentlyUsed),
@@ -15,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_cur_pid = 1;
     m_cur_sid = 0;
-    m_player->setPlaylist(m_playlist);
+//    m_player->setPlaylist(m_playlist);
 
     m_db.setHostName("localhost");
     m_db.setDatabaseName("databaseUamp");
@@ -60,9 +61,11 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i = 1; i < m_model->columnCount(); i++)
         ui->treeView->hideColumn(i);
 
-    QObject::connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
-    QObject::connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playMusic())); // кнопка запуска трека
-    QObject::connect(m_player, &QMediaPlayer::positionChanged, this, &MainWindow::changing_run);
+    player = new Player(this, ui);
+
+    connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
+//    connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playMusic())); // кнопка запуска трека
+//    connect(m_player, &QMediaPlayer::positionChanged, this, &MainWindow::changing_run);
     connect(ui->tableView, &QAbstractItemView::clicked, this, &MainWindow::currentMusicTableIndex);
     connect(m_sqlModel, &QSqlTableModel::beforeUpdate, this, &MainWindow::on_editTableModel_clicked);
     connect(m_playlists_win, SIGNAL(changePlaylistSig(int)), this, SLOT(changePlaylist(int)));
@@ -73,8 +76,8 @@ MainWindow::~MainWindow()
 {
     m_db.close();
     delete m_model;
-    delete m_playlist;
-    delete m_player;
+//    delete m_playlist;
+//    delete m_player;
     delete m_sqlModel;
     delete m_playlists_win;
     delete m_recently_used_win;
@@ -95,11 +98,11 @@ void MainWindow::openMusicFile() {
         TagLib::FileRef f(m_path_file.toStdString().c_str());
 
         if(f.file()->isValid()) {
-            int sec = f.audioProperties()->lengthInSeconds();
+//            int sec = f.audioProperties()->lengthInSeconds();
 
             ui->trackName->setText(TStringToQString(f.tag()->title()));
             ui->authorName->setText(TStringToQString(f.tag()->artist()));
-            ui->trackLength->setText(rightTimeChange(sec));
+//            ui->trackLength->setText(rightTimeChange(sec));
             setMusicInfo();
         }
     }
@@ -273,9 +276,12 @@ void MainWindow::addToQueue() {
 
     	ui->listWidget->addItem(m_cur_title);
 
-    	m_playlist->addMedia(QMediaContent(QUrl::fromLocalFile(m_path_file)));
+    	player->addToPlaylist({QUrl::fromLocalFile(m_path_file)});
 
-    	//std::cout << m_path_file.toStdString() << std::endl;
+//    	m_playlist->addMedia(QMediaContent(QUrl::fromLocalFile(m_path_file)));
+//        m_playlist->setPlaybackMode(QMediaPlaylist::CurrentItemInLoop);
+//        m_player->setPlaylist(m_playlist);
+        //std::cout << m_path_file.toStdString() << std::endl;
 	}
 }
 
@@ -323,28 +329,28 @@ void MainWindow::on_actionOpen_File_triggered() {
     }
 }
 
-void MainWindow::on_horizontalSlider_valueChanged(int value) {
-    m_player->setPosition(value * 1000);
-}
+//void MainWindow::on_horizontalSlider_valueChanged(int value) {
+//    m_player->setPosition(value * 1000);
+//}
 
-void MainWindow::on_horizontalSlider_sliderPressed()
-{
-    m_player->blockSignals(true);
-}
+//void MainWindow::on_horizontalSlider_sliderPressed()
+//{
+//    m_player->blockSignals(true);
+//}
 
-void MainWindow::on_horizontalSlider_sliderReleased()
-{
-    m_player->blockSignals(false);
-}
+//void MainWindow::on_horizontalSlider_sliderReleased()
+//{
+//    m_player->blockSignals(false);
+//}
 
 void MainWindow::currentMusicTableIndex(const QModelIndex &index) {
     m_table_index = index;
 }
 
 void MainWindow::changing_run() {
-    ui->horizontalSlider->blockSignals(true);
-    ui->horizontalSlider->setSliderPosition(m_player->position()/1000);
-    ui->horizontalSlider->blockSignals(false);
+//    ui->horizontalSlider->blockSignals(true);
+//    ui->horizontalSlider->setSliderPosition(m_player->position()/1000);
+//    ui->horizontalSlider->blockSignals(false);
 }
 
 void MainWindow::elementClicked(const QModelIndex& current) {
@@ -366,28 +372,28 @@ void MainWindow::elementClicked(const QModelIndex& current) {
     insertSettInfo();
     openMusicFile();
     addToQueue();
-    if (m_player->state() != QMediaPlayer::StoppedState)
-        m_player->stop();
+//    if (m_player->state() != QMediaPlayer::StoppedState)
+//        m_player->stop();
     playMusic(); // отыгрывает трек
 }
 
 void MainWindow::playMusic() {
-    if (m_player->state() == QMediaPlayer::PlayingState) {
-        m_player->pause();
-        ui->playButton->setIcon(QIcon("./app/resources/playButton.svg"));
-    }
-    else if (m_player->state() == QMediaPlayer::PausedState) {
-        m_player->play();
-        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
-    }
-    else if (m_player->state() == QMediaPlayer::StoppedState) {
-        m_player->setMedia(QUrl::fromLocalFile(m_path_file));
-        ui->horizontalSlider->setSliderPosition(0);
-        ui->horizontalSlider->setRange(0, m_player->duration()/1000);
-        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
-        m_player->setVolume(0);
-        m_player->play();
-    }
+//    if (m_player->state() == QMediaPlayer::PlayingState) {
+//        m_player->pause();
+//        ui->playButton->setIcon(QIcon("./app/resources/playButton.svg"));
+//    }
+//    else if (m_player->state() == QMediaPlayer::PausedState) {
+//        m_player->play();
+//        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
+//    }
+//    else if (m_player->state() == QMediaPlayer::StoppedState) {
+//        m_player->setMedia(QUrl::fromLocalFile(m_path_file));
+//        ui->horizontalSlider->setSliderPosition(0);
+//        ui->horizontalSlider->setRange(0, m_player->duration()/1000);
+//        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
+//        m_player->setVolume(0);
+//        m_player->play();
+//    }
 }
 
 void MainWindow::on_editTableModel_clicked(int, QSqlRecord &) {
@@ -507,20 +513,20 @@ void MainWindow::setDir(QString dir) {
     ui->treeView->setRootIndex(m_model->index(m_path_dir));
 }
 
-void MainWindow::on_dial_sliderMoved(int position)
-{
-    m_player->setVolume(position);
-}
+//void MainWindow::on_dial_sliderMoved(int position)
+//{
+//    m_player->setVolume(position);
+//}
 
-void MainWindow::on_nextButton_clicked()
-{
-    m_playlist->next();
-}
+//void MainWindow::on_nextButton_clicked()
+//{
+//    m_playlist->next();
+//}
 
-void MainWindow::on_previousButton_clicked()
-{
-    m_playlist->previous();
-}
+//void MainWindow::on_previousButton_clicked()
+//{
+//    m_playlist->previous();
+//}
 
 void MainWindow::funcForDelete() {
     QString path = m_sqlModel->record(m_table_index.row()).value("Path").toString();

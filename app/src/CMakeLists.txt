@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.18.2)
+cmake_minimum_required(VERSION 3.17.2)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCES mainwindow.cpp recentlyused.cpp playlists.cpp)
+set(SOURCES mainwindow.cpp recentlyused.cpp playlists.cpp Player.cpp Controls.cpp)
 
-set(HEADERS mainwindow.h recentlyused.h playlists.h)
+set(HEADERS mainwindow.h recentlyused.h playlists.h Player.h Controls.h)
 
 set(UI mainwindow.ui recentlyused.ui playlists.ui)
 
