@@ -24,6 +24,7 @@ public:
 
     void updateDurationInfo(qint64 currentInfo);
     void addToPlaylist(const QList<QUrl> &urls);
+    void deleteFromPlaylist(int pos);
 
 private:
     void handleCursor(QMediaPlayer::MediaStatus status);

@@ -5,8 +5,6 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow),
     m_model(new QFileSystemModel(this)),
-//    m_player(new QMediaPlayer),
-//    m_playlist(new QMediaPlaylist(m_player)),
     m_db(QSqlDatabase::addDatabase("QSQLITE")),
     m_sqlModel(new QSqlTableModel),
     m_recently_used_win(new RecentlyUsed),
@@ -16,12 +14,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_cur_pid = 1;
     m_cur_sid = 0;
-//    m_player->setPlaylist(m_playlist);
+
+    m_player = new Player(this, ui);
 
     m_db.setHostName("localhost");
     m_db.setDatabaseName("databaseUamp");
     bool ok = m_db.open();
-    
+
     if (ok) {
         creationOfTables();
         dataRecovery();
@@ -61,11 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i = 1; i < m_model->columnCount(); i++)
         ui->treeView->hideColumn(i);
 
-    player = new Player(this, ui);
-
     connect(ui->treeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(elementClicked(QModelIndex)));
-//    connect(ui->playButton, SIGNAL(clicked()), this, SLOT(playMusic())); // кнопка запуска трека
-//    connect(m_player, &QMediaPlayer::positionChanged, this, &MainWindow::changing_run);
     connect(ui->tableView, &QAbstractItemView::clicked, this, &MainWindow::currentMusicTableIndex);
     connect(m_sqlModel, &QSqlTableModel::beforeUpdate, this, &MainWindow::on_editTableModel_clicked);
     connect(m_playlists_win, SIGNAL(changePlaylistSig(int)), this, SLOT(changePlaylist(int)));
@@ -76,8 +71,6 @@ MainWindow::~MainWindow()
 {
     m_db.close();
     delete m_model;
-//    delete m_playlist;
-//    delete m_player;
     delete m_sqlModel;
     delete m_playlists_win;
     delete m_recently_used_win;
@@ -98,12 +91,10 @@ void MainWindow::openMusicFile() {
         TagLib::FileRef f(m_path_file.toStdString().c_str());
 
         if(f.file()->isValid()) {
-//            int sec = f.audioProperties()->lengthInSeconds();
 
-            ui->trackName->setText(TStringToQString(f.tag()->title()));
-            ui->authorName->setText(TStringToQString(f.tag()->artist()));
-//            ui->trackLength->setText(rightTimeChange(sec));
             setMusicInfo();
+            ui->trackName->setText(m_cur_title);
+            ui->authorName->setText(m_cur_artist);
         }
     }
 }
@@ -184,7 +175,6 @@ QString MainWindow::createFilter() {
             filter += ")";
         }
     }
-    std::cout << filter.toStdString() << std::endl;
     return filter;
 }
 
@@ -204,8 +194,9 @@ void MainWindow::show_table() {
     ui->tableView->setColumnWidth(4, 177);
     ui->tableView->setColumnWidth(5, 80);
     ui->tableView->setColumnWidth(6, 50);
-    ui->tableView->setColumnWidth(7, 70);
+    ui->tableView->setColumnWidth(8, 165);
     ui->tableView->hideColumn(0); // don't show ID's
+    ui->tableView->hideColumn(7); // not ready Played column
     ui->tableView->show();
 }
 
@@ -232,12 +223,11 @@ void MainWindow::dataRecovery() {
     m_path_file = model.record(model.rowCount() - 1).value("curSong").toString();
     m_path_dir = model.record(model.rowCount() - 1).value("recentlyUsed").toString();
 
-    if(!m_path_dir.isEmpty()) {
+    if(!m_path_dir.isEmpty() && QFileInfo::exists(m_path_dir)) {
         m_model->setRootPath(m_path_dir);
         ui->treeView->setModel(m_model);
     }
     model.setQuery("SELECT Name FROM Playlists");
-    openMusicFile();
 }
 
 void MainWindow::addGeneral() {
@@ -271,17 +261,12 @@ bool MainWindow::sidInPidIsUnique() {
 }
 
 void MainWindow::addToQueue() {
-	if (!m_queue.contains(m_path_file)) {
-		m_queue.push_back(m_path_file);
+	if (!m_queue.contains(m_cur_title)) {
+		m_queue.push_back(m_cur_title);
 
     	ui->listWidget->addItem(m_cur_title);
 
-    	player->addToPlaylist({QUrl::fromLocalFile(m_path_file)});
-
-//    	m_playlist->addMedia(QMediaContent(QUrl::fromLocalFile(m_path_file)));
-//        m_playlist->setPlaybackMode(QMediaPlaylist::CurrentItemInLoop);
-//        m_player->setPlaylist(m_playlist);
-        //std::cout << m_path_file.toStdString() << std::endl;
+    	m_player->addToPlaylist({QUrl::fromLocalFile(m_path_file)});
 	}
 }
 
@@ -295,7 +280,7 @@ void MainWindow::on_actionOpen_Folder_triggered()
     QString dirname = dialog.getExistingDirectory();
 
     if (dirname.isEmpty())
-        return ;
+        return;
     m_path_dir = dirname;
     m_path_file.clear();
 
@@ -313,8 +298,10 @@ void MainWindow::on_actionOpen_File_triggered() {
     QString filename = dialog.getOpenFileName();
 
     QFile file(filename);
+    QFileInfo info(filename);
+    QString extension = info.suffix();
 
-    if (file.open(QFile::ReadOnly | QFile::Text)) {
+    if (file.open(QFile::ReadOnly | QFile::Text) && (extension == "mp3" || extension == "mp4" || extension == "wav" || extension == "m4a")) {
 
         m_path_file = filename;
         QFileInfo fileInfo(filename);
@@ -323,34 +310,15 @@ void MainWindow::on_actionOpen_File_triggered() {
         insertRecentlyUsed();
         insertSettInfo();
         openMusicFile();
+        addToQueue();
         m_model->setRootPath(m_path_dir);
         m_model->setNameFilters(m_allowedTypes);
         ui->treeView->setRootIndex(m_model->index(m_path_dir));
     }
 }
 
-//void MainWindow::on_horizontalSlider_valueChanged(int value) {
-//    m_player->setPosition(value * 1000);
-//}
-
-//void MainWindow::on_horizontalSlider_sliderPressed()
-//{
-//    m_player->blockSignals(true);
-//}
-
-//void MainWindow::on_horizontalSlider_sliderReleased()
-//{
-//    m_player->blockSignals(false);
-//}
-
 void MainWindow::currentMusicTableIndex(const QModelIndex &index) {
     m_table_index = index;
-}
-
-void MainWindow::changing_run() {
-//    ui->horizontalSlider->blockSignals(true);
-//    ui->horizontalSlider->setSliderPosition(m_player->position()/1000);
-//    ui->horizontalSlider->blockSignals(false);
 }
 
 void MainWindow::elementClicked(const QModelIndex& current) {
@@ -367,38 +335,19 @@ void MainWindow::elementClicked(const QModelIndex& current) {
         if (i.toStdString() != "/")
             tmp_path += "/" + i;
     }
-    m_path_file = tmp_path;
 
-    insertSettInfo();
-    openMusicFile();
-    addToQueue();
-//    if (m_player->state() != QMediaPlayer::StoppedState)
-//        m_player->stop();
-    playMusic(); // отыгрывает трек
-}
-
-void MainWindow::playMusic() {
-//    if (m_player->state() == QMediaPlayer::PlayingState) {
-//        m_player->pause();
-//        ui->playButton->setIcon(QIcon("./app/resources/playButton.svg"));
-//    }
-//    else if (m_player->state() == QMediaPlayer::PausedState) {
-//        m_player->play();
-//        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
-//    }
-//    else if (m_player->state() == QMediaPlayer::StoppedState) {
-//        m_player->setMedia(QUrl::fromLocalFile(m_path_file));
-//        ui->horizontalSlider->setSliderPosition(0);
-//        ui->horizontalSlider->setRange(0, m_player->duration()/1000);
-//        ui->playButton->setIcon(QIcon("./app/resources/pause.svg"));
-//        m_player->setVolume(0);
-//        m_player->play();
-//    }
+    QFileInfo info(tmp_path);
+    QString extension = info.suffix();
+    if (info.isFile() && (extension == "mp3" || extension == "mp4" || extension == "wav" || extension == "m4a")){
+        m_path_file = tmp_path;
+        insertSettInfo();
+        openMusicFile();
+        addToQueue();
+    }
 }
 
 void MainWindow::on_editTableModel_clicked(int, QSqlRecord &) {
     QString path = m_sqlModel->record(m_table_index.row()).value("Path").toString();
-    // std::cout << path.toStdString() << std::endl;
     TagLib::FileRef f(path.toStdString().c_str());
 
     if(f.file()->isValid()) {
@@ -417,8 +366,7 @@ void MainWindow::on_editTableModel_clicked(int, QSqlRecord &) {
 void MainWindow::on_actionRecently_opened_triggered() {
     QSqlTableModel *sqlModel = new QSqlTableModel;
 
-    //sqlModel->setTable("recentlyUsed");
-    sqlModel->setTable("List_sid_pid");
+    sqlModel->setTable("recentlyUsed");
     sqlModel->select();
 
     m_recently_used_win->setModel(sqlModel);
@@ -458,9 +406,6 @@ void MainWindow::onLibraryContextMenu(const QPoint &point)
 
 void MainWindow::onTableContextMenu(const QPoint &point)
 {
-    // QModelIndex p = ui->tableView->currentIndex();
-    // p.data().toString();
-
     QMenu contextMenu(tr("SideBar context menu"), this);
 
     QAction action_delete("Delete from playlist", this);
@@ -513,21 +458,6 @@ void MainWindow::setDir(QString dir) {
     ui->treeView->setRootIndex(m_model->index(m_path_dir));
 }
 
-//void MainWindow::on_dial_sliderMoved(int position)
-//{
-//    m_player->setVolume(position);
-//}
-
-//void MainWindow::on_nextButton_clicked()
-//{
-//    m_playlist->next();
-//}
-
-//void MainWindow::on_previousButton_clicked()
-//{
-//    m_playlist->previous();
-//}
-
 void MainWindow::funcForDelete() {
     QString path = m_sqlModel->record(m_table_index.row()).value("Path").toString();
     QSqlQuery query;
@@ -539,70 +469,12 @@ void MainWindow::funcForDelete() {
 }
 
 void MainWindow::deleteQueueElement() {
-    QModelIndex p = ui->tableView->currentIndex();
-    QString currentSong = p.data().toString();
-    std::cout << currentSong.toStdString() << std::endl;
-    // ui->listWidget->clear();
-    // m_queue.removeOne(currentSong);
-    // for (auto item : m_queue)
-    //     ui->listWidget->addItem(item);
+    QModelIndex p = ui->listWidget->currentIndex();
+    m_player->deleteFromPlaylist(p.row());
+
+    qDebug() << p.data().toString() << " " << p.row();
+    m_queue.removeOne(p.data().toString());
+    ui->listWidget->clear();
+    for (auto item : m_queue)
+        ui->listWidget->addItem(item);
 }
-
-// bool TagFunctions::set_image_mpeg(char *file_path, char *image_path)
-// {
-//     QFileInfo file(file_path);
-//     if (!file.isWritable()) {
-//         return false;
-//     }
-//     TagLib::MPEG::File mpegFile(file_path);
-//     TagLib::ID3v2::Tag *tag = mpegFile.ID3v2Tag();
-//     TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
-//     TagLib::ID3v2::AttachedPictureFrame *frame = 0;
-//     if(frames.isEmpty())
-//     {
-//         frame = new TagLib::ID3v2::AttachedPictureFrame;
-//         tag->addFrame(frame);
-//     }
-//     else
-//     {
-//         frame = static_cast<TagLib::ID3v2::AttachedPictureFrame *>(frames.front());
-//     }
-//     ImageFile imageFile(image_path);
-//     TagLib::ByteVector imageData = imageFile.data();
-//     frame->setMimeType("image/jpeg");
-//     frame->setPicture(imageData);
-//     mpegFile.save();
-//     return true;
-// }
-
-// void MainWindow::on_actionSave_triggered()
-// {
-//     TagLib::FileRef f(m_path_file.toStdString().c_str());
-
-//     if(f.file()->isValid()) {
-//         QString buffer = ui->textEdit->toPlainText();
-//         f.tag()->setArtist(QStringToTString(buffer));
-//         buffer = ui->textEdit_1->toPlainText();
-//         f.tag()->setTitle(QStringToTString(buffer));
-//         buffer = ui->textEdit_2->toPlainText();
-//         f.tag()->setAlbum(QStringToTString(buffer));
-//         buffer = ui->textEdit_3->toPlainText();
-//         f.tag()->setGenre(QStringToTString(buffer));
-//         f.save();
-//     }
-// }
-
-// void MainWindow::on_actionSave_as_triggered()
-// {
-//     QFileDialog dialog(0);
-//     dialog.setWindowModality(Qt::WindowModal);
-//     dialog.setAcceptMode(QFileDialog::AcceptSave);
-//     if (dialog.exec() == QDialog::Accepted) {
-//         QFile file(dialog.selectedFiles().first());
-//         QFileInfo fileInfo(dialog.selectedFiles().first());
-
-//         m_path_dir = fileInfo.dir().absolutePath();
-//         m_model->setRootPath(m_path_dir);
-//         ui->treeView->setRootIndex(m_model->index(m_path_dir));
-//     }
-// }

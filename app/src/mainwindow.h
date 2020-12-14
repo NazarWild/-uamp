@@ -24,6 +24,7 @@
 #include <QAbstractItemView>
 #include <QSqlTableModel>
 #include <QMediaPlaylist>
+#include <QFileInfo>
 
 #include <iostream>
 #include <string>
@@ -90,23 +91,9 @@ private slots: // all actions
 
     void on_actionOpen_File_triggered();
 
-//    void on_horizontalSlider_valueChanged(int value);
-
-    // void on_actionSave_triggered();
-
-    // void on_actionSave_as_triggered();
-
-//    void on_horizontalSlider_sliderPressed();
-
-//    void on_horizontalSlider_sliderReleased();
-
     void currentMusicTableIndex(const QModelIndex &index);
 
-    void changing_run();
-
     void elementClicked(const QModelIndex& current);
-
-    void playMusic();
 
     void on_editTableModel_clicked(int, QSqlRecord &);
 
@@ -126,12 +113,6 @@ private slots: // all actions
 
     void setDir(QString dir);
 
-//    void on_dial_sliderMoved(int position);
-
-//    void on_nextButton_clicked();
-
-//    void on_previousButton_clicked();
-
     void funcForDelete();
 
     void deleteQueueElement();
@@ -141,8 +122,6 @@ private:
     QString m_path_file;
     QString m_path_dir;
     QFileSystemModel *m_model;
-    QMediaPlayer *m_player;
-    QMediaPlaylist *m_playlist;
     QSqlDatabase m_db;
     QSqlTableModel *m_sqlModel;
     QModelIndex m_table_index;
@@ -159,5 +138,5 @@ private:
 private:
     RecentlyUsed *m_recently_used_win;
     Playlists *m_playlists_win;
-    Player *player;
+    Player *m_player;
 };

@@ -146,6 +146,12 @@ void Player::addToPlaylist(const QList<QUrl> &urls) {
         }
     }
 }
+
+void Player::deleteFromPlaylist(int pos) {
+    m_playlist->removeMedia(pos);
+    qDebug() << "UDALIL\n";
+}
+
 void Player::metaDataAboutToChanged() {
     if (m_player->isMetaDataAvailable()) {
         ui->trackName->setText(m_player->metaData(QMediaMetaData::Title).toString());
