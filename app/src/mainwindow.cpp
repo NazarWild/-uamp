@@ -478,3 +478,17 @@ void MainWindow::deleteQueueElement() {
     for (auto item : m_queue)
         ui->listWidget->addItem(item);
 }
+
+void MainWindow::on_actionFast_triggered()
+{
+    int pos = m_player->m_player->position();
+    pos += 10 * 1000;
+    m_player->m_player->setPosition(pos);
+}
+
+void MainWindow::on_actionFast_Rewind_triggered()
+{
+    int pos = m_player->m_player->position();
+    pos += -10 * 1000;
+    m_player->m_player->setPosition(pos);
+}

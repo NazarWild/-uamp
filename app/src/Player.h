@@ -26,6 +26,8 @@ public:
     void addToPlaylist(const QList<QUrl> &urls);
     void deleteFromPlaylist(int pos);
 
+    QMediaPlayer *m_player{Q_NULLPTR};
+
 private:
     void handleCursor(QMediaPlayer::MediaStatus status);
 
@@ -43,7 +45,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QMediaPlayer *m_player{Q_NULLPTR};
     QMediaPlaylist *m_playlist{Q_NULLPTR};
     Controls *controls{Q_NULLPTR};
     qint64 m_duration;

@@ -38,6 +38,7 @@ signals:
     void stop();
     void next();
     void previous();
+
     void changeVolume(int volume);
     void changeMode(QMediaPlaylist::PlaybackMode mode);
 

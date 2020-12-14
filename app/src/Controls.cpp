@@ -106,5 +106,3 @@ void Controls::onVolumeDialValueChanged() {
 void Controls::updateMode() {
     emit changeMode(playbackMode());
 }
-
-

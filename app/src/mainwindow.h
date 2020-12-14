@@ -117,6 +117,10 @@ private slots: // all actions
 
     void deleteQueueElement();
 
+    void on_actionFast_triggered();
+
+    void on_actionFast_Rewind_triggered();
+
 private:
     Ui::MainWindow *ui;
     QString m_path_file;
